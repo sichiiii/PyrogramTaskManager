@@ -24,7 +24,6 @@ async def check_emotions():
     try:
         await app.start()
         async for message in app.get_chat_history(chat_id=chat_id):
-            print(message.from_user.id)
             if message.from_user.id == 1003945710:
                 if message.reactions:
                     emoji = message.reactions[0].emoji

@@ -2,7 +2,6 @@ import os
 import uuid
 import asyncio
 import aiofiles
-import databases
 import app_logger
 
 from pyrogram import Client
@@ -10,10 +9,6 @@ from functools import wraps
 from typing import Callable, Awaitable, Optional
 from fastapi import FastAPI, File, UploadFile, Form
 from starlette.concurrency import run_in_threadpool as run_in_threadpool
-
-DATABASE_URL = "sqlite:///./test.db"
-
-database = databases.Database(DATABASE_URL)
 
 logger = app_logger.get_logger(__name__)
 tgSendApp = FastAPI()
@@ -28,8 +23,8 @@ async def check_emotions():
     )
     try:
         await app.start()
-        peer = app.resolve_peer(chat_id)
         async for message in app.get_chat_history(chat_id=chat_id):
+            print(message.from_user.id)
             if message.from_user.id == 1003945710:
                 if message.reactions:
                     emoji = message.reactions[0].emoji
@@ -43,15 +38,13 @@ async def check_emotions():
         print(str(ex))
 
 
-def repeat_every(*, wait_first: bool = False):
+def repeat_every():
     def decorator(func: Callable[[], Optional[Awaitable[None]]]):
         is_coroutine = asyncio.iscoroutinefunction(func)
 
         @wraps(func)
         async def wrapped():
             async def loop():
-                if wait_first:
-                    await asyncio.sleep(1)
                 while True:
                     try:
                         if is_coroutine:
@@ -67,7 +60,7 @@ def repeat_every(*, wait_first: bool = False):
 
 
 @tgSendApp.on_event("startup")
-@repeat_every()  # 24 hours
+@repeat_every()
 async def remove_expired_tokens_task():
     _ = await check_emotions()
 

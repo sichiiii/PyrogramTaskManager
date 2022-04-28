@@ -35,10 +35,13 @@ async def check_emotions():
         async for message in app.get_chat_history(chat_id=chat_id):
             if message.from_user.id == 1003945710:
                 if message.reactions:
-                    emoji = message.reactions[0].emoji
-                    if emoji == '🔥':
+                    emoji_arr = []
+                    for i in message.reactions:
+                        emoji_arr.append(i.emoji)
+                    if '🔥' in emoji_arr:
                         await message.delete()
-                    elif emoji == '👍':
+                        return
+                    elif '👍' in emoji_arr:
                         if not message.text:
                             if message.caption:
                                 message_end = message.caption[-11:]
@@ -50,6 +53,7 @@ async def check_emotions():
                             message_end = message.text[-11:]
                             if message_end != "В обработке":
                                 await message.edit_text(message.text + " - В обработке")
+        return
     except Exception as ex:
         if str(ex) != 'Telegram says: [400 MESSAGE_ID_INVALID] - The message id is invalid (caused by "messages.EditMessage")':
             logger.error(str(ex))

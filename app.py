@@ -5,29 +5,34 @@ import aiofiles
 import app_logger
 
 from pyrogram import Client
-from functools import wraps
 from typing import Callable, Awaitable, Optional
 from fastapi import FastAPI, File, UploadFile, Form
 from fastapi_utils.tasks import repeat_every
-from fastapi_utils.session import FastAPISessionMaker
 
 
 logger = app_logger.get_logger(__name__)
 tgSendApp = FastAPI()
-
-
-async def check_emotions():
-    chat_id = -716352016
-    app = Client(
+app = Client(
         "cyberjabka",
         api_id=2823137,
         api_hash='df822805777e34b345af4e53bd07c246'
     )
 
+
+@tgSendApp.on_event("startup")
+async def startup_event():
+    await app.start()
+
+
+@tgSendApp.on_event("startup")
+@repeat_every(seconds=2)  # 1 hour
+async def check_emotions_task() -> None:
+    await check_emotions()
+
+
+async def check_emotions():
     try:
-        print(1)
-        await app.start()
-        print(2)
+        chat_id = -716352016
         async for message in app.get_chat_history(chat_id=chat_id):
             if message.from_user.id == 1003945710:
                 if message.reactions:
@@ -42,22 +47,10 @@ async def check_emotions():
         print(str(ex))
 
 
-@tgSendApp.on_event("startup")
-@repeat_every(seconds=15)  # 1 hour
-async def check_emotions_task() -> None:
-    await check_emotions()
-
-
 @tgSendApp.post('/')
 async def chat(chat_id: int = Form(...), text: Optional[str] = Form(None), file: Optional[UploadFile] = File(None)):
     try:
         chat_id = -716352016
-        app = Client(
-            "cyberjabka",
-            api_id=2823137,
-            api_hash='df822805777e34b345af4e53bd07c246'
-        )
-        await app.start()
         if file:
             file.filename = f"{uuid.uuid4()}.jpg"
             picture_path = f'{os.getcwd()}/storage/{file.filename}'

@@ -1,6 +1,5 @@
 import os
 import uuid
-import asyncio
 import aiofiles
 import app_logger
 
@@ -20,12 +19,12 @@ app = Client(
 
 
 @tgSendApp.on_event("startup")
-async def startup_event():
+async def startup_event() -> None:
     await app.start()
 
 
 @tgSendApp.on_event("startup")
-@repeat_every(seconds=2)  # 1 hour
+@repeat_every(seconds=2)
 async def check_emotions_task() -> None:
     await check_emotions()
 
@@ -40,15 +39,25 @@ async def check_emotions():
                     if emoji == '🔥':
                         await message.delete()
                     elif emoji == '👍':
-                        message_end = message.text[-14:]
-                        if message_end != " - В обработке":
-                            await message.edit_text(message.text + " - В обработке")
+                        if not message.text:
+                            if message.caption:
+                                message_end = message.caption[-11:]
+                                if message_end != "В обработке":
+                                    await app.edit_message_caption(chat_id, message.id, message.caption + " - В обработке")
+                            else:
+                                await app.edit_message_caption(chat_id, message.id, "В обработке")
+                        else:
+                            message_end = message.text[-11:]
+                            if message_end != "В обработке":
+                                await message.edit_text(message.text + " - В обработке")
     except Exception as ex:
-        print(str(ex))
+        if str(ex) != 'Telegram says: [400 MESSAGE_ID_INVALID] - The message id is invalid (caused by "messages.EditMessage")':
+            logger.error(str(ex))
 
 
 @tgSendApp.post('/')
-async def chat(chat_id: int = Form(...), text: Optional[str] = Form(None), file: Optional[UploadFile] = File(None)):
+async def chat(chat_id: int = Form(...), text: Optional[str] = Form(None), file: Optional[UploadFile] = File(None),
+               file_path: Optional[str] = Form(None)):
     try:
         chat_id = -716352016
         if file:
@@ -60,6 +69,10 @@ async def chat(chat_id: int = Form(...), text: Optional[str] = Form(None), file:
             await app.send_photo(chat_id, photo=open(picture_path, 'rb'))
             os.remove(picture_path)
             return {"status": "ok", "filename": file.filename}
+        if file_path:
+            await app.send_photo(chat_id, photo=open(file_path, 'rb'))
+            os.remove(file_path)
+            return {"status": "ok", "filename": file_path}
         if text:
             await app.send_message(chat_id, str(text))
             return {"status": "ok", "text": text}

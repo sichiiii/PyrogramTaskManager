@@ -8,7 +8,9 @@ from pyrogram import Client
 from functools import wraps
 from typing import Callable, Awaitable, Optional
 from fastapi import FastAPI, File, UploadFile, Form
-from starlette.concurrency import run_in_threadpool as run_in_threadpool
+from fastapi_utils.tasks import repeat_every
+from fastapi_utils.session import FastAPISessionMaker
+
 
 logger = app_logger.get_logger(__name__)
 tgSendApp = FastAPI()
@@ -21,8 +23,11 @@ async def check_emotions():
         api_id=2823137,
         api_hash='df822805777e34b345af4e53bd07c246'
     )
+
     try:
+        print(1)
         await app.start()
+        print(2)
         async for message in app.get_chat_history(chat_id=chat_id):
             if message.from_user.id == 1003945710:
                 if message.reactions:
@@ -37,31 +42,10 @@ async def check_emotions():
         print(str(ex))
 
 
-def repeat_every():
-    def decorator(func: Callable[[], Optional[Awaitable[None]]]):
-        is_coroutine = asyncio.iscoroutinefunction(func)
-
-        @wraps(func)
-        async def wrapped():
-            async def loop():
-                while True:
-                    try:
-                        if is_coroutine:
-                            await func()
-                        else:
-                            await run_in_threadpool(func)
-                    except Exception as e:
-                        logger.error(str(e))
-                    await asyncio.sleep(5)
-            asyncio.create_task(loop())
-        return wrapped
-    return decorator
-
-
 @tgSendApp.on_event("startup")
-@repeat_every()
-async def remove_expired_tokens_task():
-    _ = await check_emotions()
+@repeat_every(seconds=15)  # 1 hour
+async def check_emotions_task() -> None:
+    await check_emotions()
 
 
 @tgSendApp.post('/')

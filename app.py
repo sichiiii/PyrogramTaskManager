@@ -1,12 +1,14 @@
 import os
 import uuid
+import uvicorn
 import aiofiles
 import app_logger
 
+from time import sleep
 from pyrogram import Client
+from fastapi_utils.tasks import repeat_every
 from typing import Callable, Awaitable, Optional
 from fastapi import FastAPI, File, UploadFile, Form
-from fastapi_utils.tasks import repeat_every
 
 
 logger = app_logger.get_logger(__name__)
@@ -29,10 +31,26 @@ async def check_emotions_task() -> None:
     await check_emotions()
 
 
+async def forward_message(message,  chat_id: int, hours: float = None):
+    if hours:
+        sleep(hours*60*60)
+    else:
+        sleep(4*60*60)
+    await message.forward_messages(chat_id)
+
+
 async def check_emotions():
     try:
         chat_id = -716352016
+        # async for repl_mes in app.get_discussion_replies(chat_id=chat_id, message_id=236054):
+        #     print(repl_mes)
         async for message in app.get_chat_history(chat_id=chat_id):
+            print(message.id)
+            try:
+                message.reply_to_top_message_id
+            except Exception as ex:
+                print(str(ex))
+                pass
             if message.from_user.id == 1003945710:
                 if message.reactions:
                     emoji_arr = []
@@ -83,3 +101,6 @@ async def chat(chat_id: int = Form(...), text: Optional[str] = Form(None), file:
         raise Exception('Wrong data (specify picture or text)')
     except Exception as ex:
         logger.error(str(ex))
+
+if __name__ == '__main__':
+    uvicorn.run(app="app:tgSendApp", host="0.0.0.0", port=5001, reload=False, debug=True)

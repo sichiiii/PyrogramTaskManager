@@ -5,9 +5,9 @@ import aiofiles
 import app_logger
 
 from time import sleep
+from typing import Optional
 from pyrogram import Client
 from fastapi_utils.tasks import repeat_every
-from typing import Callable, Awaitable, Optional
 from fastapi import FastAPI, File, UploadFile, Form
 
 
@@ -42,15 +42,7 @@ async def forward_message(message,  chat_id: int, hours: float = None):
 async def check_emotions():
     try:
         chat_id = -716352016
-        # async for repl_mes in app.get_discussion_replies(chat_id=chat_id, message_id=236054):
-        #     print(repl_mes)
         async for message in app.get_chat_history(chat_id=chat_id):
-            print(message.id)
-            try:
-                message.reply_to_top_message_id
-            except Exception as ex:
-                print(str(ex))
-                pass
             if message.from_user.id == 1003945710:
                 if message.reactions:
                     emoji_arr = []

@@ -31,19 +31,26 @@ async def check_emotions_task() -> None:
     await check_emotions()
 
 
-async def forward_message(message,  chat_id: int, hours: float = None):
-    if hours:
-        sleep(hours*60*60)
+async def forward_message(message_id: int,  chat_id: int, hours: float):
+    parent_mes = await app.get_messages(chat_id, message_id)
+    if isinstance(hours, float):
+        sleep(hours*3600)
     else:
-        sleep(4*60*60)
-    await message.forward_messages(chat_id)
+        sleep(14400)
+    await parent_mes.forward(chat_id)
+    await parent_mes.delete()
 
 
 async def check_emotions():
     try:
         chat_id = -716352016
         async for message in app.get_chat_history(chat_id=chat_id):
-            print(message.reply_to_top_message_id)
+            if message.reply_to_message_id:
+                try:
+                    message_id = message.reply_to_message_id
+                    await forward_message(message_id, chat_id, float(message.text))
+                except:
+                    pass
             if message.from_user.id == 1003945710:
                 if message.reactions:
                     emoji_arr = []
@@ -96,4 +103,4 @@ async def chat(chat_id: int = Form(...), text: Optional[str] = Form(None), file:
         logger.error(str(ex))
 
 if __name__ == '__main__':
-    uvicorn.run(app="app:tgSendApp", host="0.0.0.0", port=5001, reload=False, debug=True)
+    uvicorn.run(app="app:tgSendApp", host="0.0.0.0", port=5000, reload=False, debug=True)

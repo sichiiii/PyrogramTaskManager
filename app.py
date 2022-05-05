@@ -43,6 +43,7 @@ async def check_emotions():
     try:
         chat_id = -716352016
         async for message in app.get_chat_history(chat_id=chat_id):
+            print(message.reply_to_top_message_id)
             if message.from_user.id == 1003945710:
                 if message.reactions:
                     emoji_arr = []

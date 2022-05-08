@@ -1,15 +1,22 @@
 from time import sleep
 from pyrogram import Client
+from config import Configuration
 from app_logger import get_logger
+
+
+config_path = './config.ini'
 
 
 class Telegram:
     def __init__(self):
         self.logger = get_logger(__name__)
+        self.config = Configuration()
+        self.config.load(config_path)
+        self.chat_id = int(self.config.get('telegram', 'chat_id'))
         self.app = Client(
-            "cyberjabka",
-            api_id=2823137,
-            api_hash='df822805777e34b345af4e53bd07c246'
+            self.config.get('telegram', 'username'),
+            api_id=int(self.config.get('telegram', 'api_id')),
+            api_hash=self.config.get('telegram', 'api_hash')
         )
 
     async def forward_message(self, message_id: int, chat_id: int, hours: float):
@@ -23,11 +30,10 @@ class Telegram:
 
     async def check_emotions(self):
         try:
-            chat_id = -716352016
-            async for message in self.app.get_chat_history(chat_id=chat_id):  # TODO: limit messages amount
+            async for message in self.app.get_chat_history(chat_id=self.chat_id):  # TODO: limit messages amount
                 if message.reply_to_message_id:
                     message_id = message.reply_to_message_id
-                    await self.forward_message(message_id, chat_id, float(message.text))
+                    await self.forward_message(message_id, self.chat_id, float(message.text))
                 if message.from_user.id == 1003945710:
                     if message.reactions:
                         emoji_arr = []
@@ -41,9 +47,10 @@ class Telegram:
                                 if message.caption:
                                     message_end = message.caption[-11:]
                                     if message_end != "В обработке":
-                                        await self.app.edit_message_caption(chat_id, message.id, message.caption + " - В обработке")
+                                        await self.app.edit_message_caption(self.chat_id, message.id, message.caption
+                                                                            + " - В обработке")
                                 else:
-                                    await self.app.edit_message_caption(chat_id, message.id, "В обработке")
+                                    await self.app.edit_message_caption(self.chat_id, message.id, "В обработке")
                             else:
                                 message_end = message.text[-11:]
                                 if message_end != "В обработке":

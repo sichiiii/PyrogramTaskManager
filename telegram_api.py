@@ -1,3 +1,7 @@
+import asyncio
+import nest_asyncio
+
+
 from time import sleep
 from pyrogram import Client
 from config import Configuration
@@ -19,21 +23,32 @@ class Telegram:
             api_hash=self.config.get('telegram', 'api_hash')
         )
 
-    async def forward_message(self, message_id: int, chat_id: int, hours: float):
-        parent_mes = await self.app.get_messages(chat_id, message_id)
-        if isinstance(hours, float):
-            sleep(hours * 3600)
-        else:
-            sleep(14400)
-        await parent_mes.forward(chat_id)
-        await parent_mes.delete()
+    async def forward_message(self, message_id: int, hours: float):
+        try:  # TODO: remove try
+            parent_mes = await self.app.get_messages(self.chat_id, message_id)
+            print(parent_mes.text)
+            if parent_mes.id:
+                if isinstance(hours, float):
+                    await asyncio.sleep(hours * 3600)
+                else:
+                    await asyncio.sleep(14400)
+                await parent_mes.forward(self.chat_id)
+                await parent_mes.delete()
+        except:
+            pass
 
     async def check_emotions(self):
         try:
             async for message in self.app.get_chat_history(chat_id=self.chat_id):  # TODO: limit messages amount
                 if message.reply_to_message_id:
                     message_id = message.reply_to_message_id
-                    await self.forward_message(message_id, self.chat_id, float(message.text))
+                    try:
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+                        asyncio.create_task(self.forward_message(message_id, float(message.text)))
+                       # await self.forward_message(message_id, float(message.text))  # TODO: check float
+                    except Exception as ex:
+                        print(str(ex))
                 if message.from_user.id == 1003945710:
                     if message.reactions:
                         emoji_arr = []

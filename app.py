@@ -2,10 +2,10 @@ import os
 import uuid
 import uvicorn
 import aiofiles
-import app_logger
 
 from typing import Optional
 from config import Configuration
+from app_logger import get_logger
 from telegram_api import Telegram
 from fastapi_utils.tasks import repeat_every
 from fastapi import FastAPI, File, UploadFile, Form
@@ -13,10 +13,9 @@ from fastapi import FastAPI, File, UploadFile, Form
 
 config_path = './config.ini'
 
-
 tgSendApp = FastAPI()
 telegram_api = Telegram()
-logger = app_logger.get_logger(__name__)
+logger = get_logger(__name__)
 
 
 @tgSendApp.on_event("startup")

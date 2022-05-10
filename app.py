@@ -10,7 +10,6 @@ from telegram_api import Telegram
 from fastapi_utils.tasks import repeat_every
 from fastapi import FastAPI, File, UploadFile, Form
 
-
 config_path = './config.ini'
 
 tgSendApp = FastAPI()
@@ -33,7 +32,6 @@ async def check_emotions_task() -> None:
 async def chat(chat_id: int = Form(...), text: Optional[str] = Form(None), file: Optional[UploadFile] = File(None),
                file_path: Optional[str] = Form(None)):
     try:
-        print(chat_id)
         chat_id = int(chat_id)
         if file:
             file.filename = f"{uuid.uuid4()}.jpg"

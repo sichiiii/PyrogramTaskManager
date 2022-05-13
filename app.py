@@ -25,7 +25,7 @@ async def startup_event() -> None:
 @tgSendApp.on_event("startup")
 @repeat_every(seconds=2)
 async def check_emotions_task() -> None:
-    await telegram_api.check_emotions()
+    await telegram_api.parse_chats()
 
 
 @tgSendApp.post('/')

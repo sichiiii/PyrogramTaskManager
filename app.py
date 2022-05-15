@@ -1,5 +1,6 @@
 import os
 import uuid
+import models
 import uvicorn
 import aiofiles
 
@@ -7,9 +8,12 @@ from typing import Optional
 from config import Configuration
 from app_logger import get_logger
 from telegram_api import Telegram
+from database import Base, engine
 from fastapi_utils.tasks import repeat_every
 from fastapi import FastAPI, File, UploadFile, Form
 
+
+Base.metadata.create_all(bind=engine)
 config_path = './config.ini'
 
 tgSendApp = FastAPI()

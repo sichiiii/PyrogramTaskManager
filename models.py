@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String
 from database import Base, engine
 
+
 class Tasks(Base):
     __tablename__ = "tasks"
 

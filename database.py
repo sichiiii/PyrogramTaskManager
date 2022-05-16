@@ -15,7 +15,6 @@ meta = MetaData(engine)
 Base = declarative_base()
 
 
-
 class SQL:
     def __init__(self):
         self.logger = app_logger.get_logger(__name__)

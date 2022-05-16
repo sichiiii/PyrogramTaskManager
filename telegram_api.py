@@ -14,6 +14,7 @@ class Telegram:
         self.config = Configuration()
         self.config.load(config_path)
         self.username = self.config.get('telegram', 'username')
+        self.user_id = int(self.config.get('telegram', 'user_id'))
         self.app = Client(
             self.username,
             api_id=int(self.config.get('telegram', 'api_id')),
@@ -49,16 +50,13 @@ class Telegram:
                     if message.caption:
                         message_end = message.caption[-11:]
                         if message_end != "В обработке":
-                            self.sql.add_task(message.from_user, message.text)
                             await self.app.edit_message_caption(chat_id, message.id, message.caption
                                                                 + " - В обработке")
                     else:
-                        self.sql.add_task(message.from_user, message.text)
                         await self.app.edit_message_caption(chat_id, message.id, "В обработке")
                 else:
                     message_end = message.text[-11:]
                     if message_end != "В обработке":
-                        self.sql.add_task(message.from_user, message.text)
                         await message.edit_text(message.text + " - В обработке")
 
     async def parse_chats(self):
@@ -80,7 +78,7 @@ class Telegram:
                         else:
                             asyncio.create_task(self.forward_message(message_id, 4.0, chat_id))
                     else:
-                        if message.from_user.id == 5376563202:  # TODO: check id from config
+                        if message.from_user.id == self.user_id:
                             await self.parse_emotions(message, chat_id)
                         else:
                             if message.text:

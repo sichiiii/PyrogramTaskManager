@@ -45,7 +45,7 @@ class Telegram:
             if '🔥' in emoji_arr:
                 await message.delete()
                 return
-            elif '👍' in emoji_arr:  # TODO: simplify
+            if '👍' in emoji_arr:  # TODO: simplify
                 if not message.text:
                     if message.caption:
                         message_end = message.caption[-11:]
@@ -71,9 +71,9 @@ class Telegram:
                         print(self.sql.get_tasks())
                     if message.reply_to_message_id:
                         message_id = message.reply_to_message_id
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
                         if self.check_float_str(message.text):
-                            loop = asyncio.new_event_loop()
-                            asyncio.set_event_loop(loop)
                             asyncio.create_task(self.forward_message(message_id, float(message.text), chat_id))
                         else:
                             asyncio.create_task(self.forward_message(message_id, 4.0, chat_id))

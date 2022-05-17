@@ -12,7 +12,6 @@ from database import Base, engine
 from fastapi_utils.tasks import repeat_every
 from fastapi import FastAPI, File, UploadFile, Form
 
-
 Base.metadata.create_all(bind=engine)
 config_path = './config.ini'
 

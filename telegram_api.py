@@ -21,6 +21,7 @@ class Telegram:
             api_hash=self.config.get('telegram', 'api_hash')
         )
         self.sql = SQL()
+        self.tasks_list = []
 
     @staticmethod
     def check_float_str(message_text):
@@ -30,12 +31,16 @@ class Telegram:
         except ValueError:
             return False
 
-    async def forward_message(self, message_id: int, hours: float, chat_id: int):
+    async def forward_message(self, parent_message_id: int, time_message_id: int, hours: float, chat_id: int):
+        self.tasks_list.append(chat_id)
         await asyncio.sleep(hours * 3600)
-        parent_mes = await self.app.get_messages(chat_id, message_id)
+        parent_mes = await self.app.get_messages(chat_id, parent_message_id)
+        time_mes = await self.app.get_messages(chat_id, time_message_id)
         if not parent_mes.empty:
             await parent_mes.forward(chat_id)
             await parent_mes.delete()
+            await time_mes.delete()
+            self.tasks_list.remove(chat_id)
 
     async def parse_emotions(self, message, chat_id):
         emoji_arr = []
@@ -70,13 +75,15 @@ class Telegram:
                     if message.text == 'Получить отчет':
                         print(self.sql.get_tasks())
                     if message.reply_to_message_id:
-                        message_id = message.reply_to_message_id
-                        loop = asyncio.new_event_loop()
-                        asyncio.set_event_loop(loop)
-                        if self.check_float_str(message.text):
-                            asyncio.create_task(self.forward_message(message_id, float(message.text), chat_id))
-                        else:
-                            asyncio.create_task(self.forward_message(message_id, 4.0, chat_id))
+                        reply_message_id = message.reply_to_message_id
+                        if reply_message_id not in self.tasks_list:
+                            loop = asyncio.new_event_loop()
+                            asyncio.set_event_loop(loop)
+                            if self.check_float_str(message.text):
+                                asyncio.create_task(self.forward_message(reply_message_id, message.id,
+                                                                         float(message.text), chat_id))
+                            else:
+                                asyncio.create_task(self.forward_message(reply_message_id, message.id, 4.0, chat_id))
                     else:
                         if message.from_user.id == self.user_id:
                             await self.parse_emotions(message, chat_id)

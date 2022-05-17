@@ -1,9 +1,9 @@
 import asyncio
 
 from database import SQL
+from pyrogram import Client
 from config import Configuration
 from app_logger import get_logger
-from pyrogram import Client, enums
 
 config_path = './config.ini'
 
@@ -24,12 +24,29 @@ class Telegram:
         self.tasks_list = []
 
     @staticmethod
-    def check_float_str(message_text):
+    def check_float_str(message_text: str):
         try:
             float(message_text)
             return True
         except ValueError:
             return False
+
+    async def resend_message(self, message, chat_id):
+        if message.text:
+            await self.app.send_message(chat_id, message.text)
+            await message.delete()
+        elif message.photo:
+            if message.caption:
+                await self.app.send_photo(chat_id, message.photo.file_id, caption=message.caption)
+            else:
+                await self.app.send_photo(chat_id, message.photo.file_id)  # TODO: check image id
+            await message.delete()
+        elif message.video:
+            if message.caption:
+                await self.app.send_video(chat_id, message.video.file_id, caption=message.caption)
+            else:
+                await self.app.send_video(chat_id, message.video.file_id)  # TODO: check image id
+            await message.delete()
 
     async def forward_message(self, parent_message_id: int, time_message_id: int, hours: float, chat_id: int):
         self.tasks_list.append(chat_id)
@@ -42,9 +59,9 @@ class Telegram:
             await time_mes.delete()
             self.tasks_list.remove(chat_id)
 
-    async def parse_emotions(self, message, chat_id):
-        emoji_arr = []
+    async def parse_emotions(self, message, chat_id: int):
         if message.reactions:
+            emoji_arr = []
             for i in message.reactions:
                 emoji_arr.append(i.emoji)
             if '🔥' in emoji_arr:
@@ -72,8 +89,8 @@ class Telegram:
         try:
             async for message in self.app.get_chat_history(chat_id=chat_id, limit=300):
                 try:
-                    if message.text == 'Получить отчет':
-                        print(self.sql.get_tasks())
+                    # if message.text == 'Получить отчет':
+                    #     print(self.sql.get_tasks())
                     if message.reply_to_message_id:
                         reply_message_id = message.reply_to_message_id
                         if reply_message_id not in self.tasks_list:
@@ -88,12 +105,12 @@ class Telegram:
                         if message.from_user.id == self.user_id:
                             await self.parse_emotions(message, chat_id)
                         else:
-                            if message.text:
-                                await self.app.send_message(chat_id, message.text)
-                                await message.delete()
+                            await self.resend_message(message, chat_id)
                 except Exception as ex:
                     self.logger.error(str(ex))
             return
         except Exception as ex:
             if str(ex) != 'Telegram says: [400 MESSAGE_ID_INVALID] - The message id is invalid (caused by "messages.EditMessage")':
                 self.logger.error(str(ex))
+            else:
+                pass

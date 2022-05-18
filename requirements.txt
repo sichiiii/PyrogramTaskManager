@@ -1,0 +1,8 @@
+aiofiles==0.8.0
+fastapi==0.78.0
+fastapi_utils==0.2.1
+Pyrogram==2.0.8
+requests==2.22.0
+SQLAlchemy==1.4.26
+uvicorn==0.11.3
+TgCrypto==1.2.3

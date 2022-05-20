@@ -1,6 +1,5 @@
 import asyncio
 
-from database import SQL
 from pyrogram import Client
 from config import Configuration
 from app_logger import get_logger
@@ -20,7 +19,6 @@ class Telegram:
             api_id=int(self.config.get('telegram', 'api_id')),
             api_hash=self.config.get('telegram', 'api_hash')
         )
-        self.sql = SQL()
         self.tasks_list = []
 
     @staticmethod
@@ -31,6 +29,38 @@ class Telegram:
         except ValueError:
             return False
 
+    async def parse_chats(self):
+        async for dialog in self.app.get_dialogs():
+            await self.parse_messages(dialog.chat.id)
+
+    async def parse_messages(self, chat_id: int):
+        try:
+            async for message in self.app.get_chat_history(chat_id=chat_id, limit=300):
+                try:
+                    if message.reply_to_message_id:
+                        reply_message_id = message.reply_to_message_id
+                        if reply_message_id not in self.tasks_list:
+                            loop = asyncio.new_event_loop()
+                            asyncio.set_event_loop(loop)
+                            if self.check_float_str(message.text):
+                                asyncio.create_task(self.forward_message(reply_message_id, message.id,
+                                                                         float(message.text), chat_id))
+                            else:
+                                asyncio.create_task(self.forward_message(reply_message_id, message.id, 4.0, chat_id))
+                    else:
+                        if message.from_user.id == self.user_id:
+                            await self.parse_emotions(message, chat_id)
+                        else:
+                            await self.resend_message(message, chat_id)
+                except Exception as ex:
+                    self.logger.error(str(ex))
+            return
+        except Exception as ex:
+            if str(ex) != 'Telegram says: [400 MESSAGE_ID_INVALID] - The message id is invalid (caused by "messages.EditMessage")':
+                self.logger.error(str(ex))
+            else:
+                pass
+
     async def resend_message(self, message, chat_id):
         if message.text:
             await self.app.send_message(chat_id, message.text)
@@ -39,13 +69,13 @@ class Telegram:
             if message.caption:
                 await self.app.send_photo(chat_id, message.photo.file_id, caption=message.caption)
             else:
-                await self.app.send_photo(chat_id, message.photo.file_id)  # TODO: check image id
+                await self.app.send_photo(chat_id, message.photo.file_id)
             await message.delete()
         elif message.video:
             if message.caption:
                 await self.app.send_video(chat_id, message.video.file_id, caption=message.caption)
             else:
-                await self.app.send_video(chat_id, message.video.file_id)  # TODO: check image id
+                await self.app.send_video(chat_id, message.video.file_id)
             await message.delete()
 
     async def forward_message(self, parent_message_id: int, time_message_id: int, hours: float, chat_id: int):
@@ -54,7 +84,7 @@ class Telegram:
         parent_mes = await self.app.get_messages(chat_id, parent_message_id)
         time_mes = await self.app.get_messages(chat_id, time_message_id)
         if not parent_mes.empty:
-            await parent_mes.forward(chat_id)
+            await self.resend_message(parent_mes, chat_id)
             await parent_mes.delete()
             await time_mes.delete()
             self.tasks_list.remove(chat_id)
@@ -80,37 +110,3 @@ class Telegram:
                     message_end = message.text[-11:]
                     if message_end != "В обработке":
                         await message.edit_text(message.text + " - В обработке")
-
-    async def parse_chats(self):
-        async for dialog in self.app.get_dialogs():
-            await self.parse_messages(dialog.chat.id)
-
-    async def parse_messages(self, chat_id: int):
-        try:
-            async for message in self.app.get_chat_history(chat_id=chat_id, limit=300):
-                try:
-                    # if message.text == 'Получить отчет':
-                    #     print(self.sql.get_tasks())
-                    if message.reply_to_message_id:
-                        reply_message_id = message.reply_to_message_id
-                        if reply_message_id not in self.tasks_list:
-                            loop = asyncio.new_event_loop()
-                            asyncio.set_event_loop(loop)
-                            if self.check_float_str(message.text):
-                                asyncio.create_task(self.forward_message(reply_message_id, message.id,
-                                                                         float(message.text), chat_id))
-                            else:
-                                asyncio.create_task(self.forward_message(reply_message_id, message.id, 4.0, chat_id))
-                    else:
-                        if message.from_user.id == self.user_id:
-                            await self.parse_emotions(message, chat_id)
-                        else:
-                            await self.resend_message(message, chat_id)
-                except Exception as ex:
-                    self.logger.error(str(ex))
-            return
-        except Exception as ex:
-            if str(ex) != 'Telegram says: [400 MESSAGE_ID_INVALID] - The message id is invalid (caused by "messages.EditMessage")':
-                self.logger.error(str(ex))
-            else:
-                pass

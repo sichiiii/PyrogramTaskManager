@@ -97,7 +97,7 @@ class Telegram:
             if '🔥' in emoji_arr:
                 await message.delete()
                 return
-            if '👍' in emoji_arr:
+            if '👍' in emoji_arr:  # TODO: simplify
                 if not message.text:
                     if message.caption:
                         message_end = message.caption[-11:]

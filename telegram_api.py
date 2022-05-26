@@ -44,9 +44,9 @@ class Telegram:
                             asyncio.set_event_loop(loop)
                             if self.check_float_str(message.text):
                                 asyncio.create_task(self.forward_message(reply_message_id, message.id,
-                                                                         float(message.text), chat_id))
+                                                                         float(message.text), chat_id, loop))
                             else:
-                                asyncio.create_task(self.forward_message(reply_message_id, message.id, 4.0, chat_id))
+                                asyncio.create_task(self.forward_message(reply_message_id, message.id, 4.0, chat_id, loop))
                     else:
                         if message.from_user.id == self.user_id:
                             await self.parse_emotions(message, chat_id)
@@ -78,7 +78,7 @@ class Telegram:
                 await self.app.send_video(chat_id, message.video.file_id)
             await message.delete()
 
-    async def forward_message(self, parent_message_id: int, time_message_id: int, hours: float, chat_id: int):
+    async def forward_message(self, parent_message_id: int, time_message_id: int, hours: float, chat_id: int, loop):
         self.tasks_list.append(chat_id)
         await asyncio.sleep(hours * 3600)
         parent_mes = await self.app.get_messages(chat_id, parent_message_id)
@@ -88,6 +88,7 @@ class Telegram:
             await parent_mes.delete()
             await time_mes.delete()
             self.tasks_list.remove(chat_id)
+        loop.close()
 
     async def parse_emotions(self, message, chat_id: int):
         if message.reactions:

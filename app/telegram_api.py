@@ -4,7 +4,7 @@ from pyrogram import Client
 from config import Configuration
 from app_logger import get_logger
 
-config_path = './config.ini'
+config_path = 'config.ini'
 
 
 class Telegram:
@@ -16,6 +16,8 @@ class Telegram:
         self.user_id = int(self.config.get('telegram', 'user_id'))
         self.app = Client(
             self.username,
+            phone_number='+6283876351344',
+            phone_code='94043',
             api_id=int(self.config.get('telegram', 'api_id')),
             api_hash=self.config.get('telegram', 'api_hash')
         )

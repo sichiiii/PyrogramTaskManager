@@ -6,7 +6,7 @@ import subprocess
 from app_logger import get_logger
 from config import Configuration
 
-config_path = './config.ini'
+config_path = 'config.ini'
 
 
 class Clipboard:

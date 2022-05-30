@@ -11,7 +11,7 @@ from fastapi_utils.tasks import repeat_every
 from fastapi import FastAPI, File, UploadFile, Form
 
 
-config_path = './config.ini'
+config_path = 'config.ini'
 
 tgSendApp = FastAPI()
 telegram_api = Telegram()

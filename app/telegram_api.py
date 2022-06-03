@@ -4,6 +4,7 @@ from pyrogram import Client
 from config import Configuration
 from app_logger import get_logger
 
+
 config_path = 'config.ini'
 
 

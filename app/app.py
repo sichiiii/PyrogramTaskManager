@@ -13,6 +13,7 @@ from fastapi import FastAPI, File, UploadFile, Form
 
 config_path = 'config.ini'
 
+
 tgSendApp = FastAPI()
 telegram_api = Telegram()
 logger = get_logger(__name__)

@@ -21,12 +21,14 @@ logger = get_logger(__name__)
 @tgSendApp.on_event("startup")
 async def startup_event() -> None:
     await telegram_api.app.start()
+    return
 
 
 @tgSendApp.on_event("startup")
-@repeat_every(seconds=2)
-async def check_emotions_task() -> None:
+@repeat_every(seconds=4)
+async def parse_chats_task() -> None:
     await telegram_api.parse_chats()
+    return
 
 
 @tgSendApp.post('/')

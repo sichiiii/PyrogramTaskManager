@@ -1,9 +1,10 @@
+import re
 import asyncio
 
 from pyrogram import Client
 from config import Configuration
 from app_logger import get_logger
-
+from time_message_parser import TimeMesParser
 
 config_path = 'config.ini'
 
@@ -17,19 +18,12 @@ class Telegram:
         self.user_id = int(self.config.get('telegram', 'user_id'))
         self.app = Client(
             self.username,
-            phone_number='+6283876351344',
+            phone_number='+375291512758',  # TODO: number to config
             api_id=int(self.config.get('telegram', 'api_id')),
             api_hash=self.config.get('telegram', 'api_hash')
         )
         self.tasks_list = []
-
-    @staticmethod
-    def check_float_str(message_text: str):
-        try:
-            float(message_text)
-            return True
-        except ValueError:
-            return False
+        self.time_mes_parser = TimeMesParser()
 
     async def parse_chats(self):
         async for dialog in self.app.get_dialogs():
@@ -43,9 +37,10 @@ class Telegram:
                     if message.reply_to_message_id:
                         reply_message_id = message.reply_to_message_id
                         if reply_message_id not in self.tasks_list:
-                            if self.check_float_str(message.text):
+                            time = self.time_mes_parser.parse_time_message(message.text)
+                            if time is not None:
                                 asyncio.create_task(self.forward_message(reply_message_id, message.id,
-                                                                         float(message.text), chat_id))
+                                                                         time, chat_id))
                             else:
                                 asyncio.create_task(self.forward_message(reply_message_id, message.id, 4.0, chat_id))
                     else:
@@ -88,14 +83,15 @@ class Telegram:
         self.tasks_list.append(parent_message_id)
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        await asyncio.sleep(hours * 3600)
+        print(hours)
+        await asyncio.sleep(hours)
         parent_mes = await self.app.get_messages(chat_id, parent_message_id)
         time_mes = await self.app.get_messages(chat_id, time_message_id)
+        await time_mes.delete()
         if not parent_mes.empty:
             await self.resend_message(parent_mes, chat_id)
             await parent_mes.delete()
-            await time_mes.delete()
-            self.tasks_list.remove(chat_id)
+            self.tasks_list.remove(parent_message_id)
         loop.close()
         return
 

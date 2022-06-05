@@ -1,10 +1,10 @@
-import re
 import asyncio
 
 from pyrogram import Client
 from config import Configuration
 from app_logger import get_logger
 from time_message_parser import TimeMesParser
+
 
 config_path = 'config.ini'
 
@@ -18,7 +18,7 @@ class Telegram:
         self.user_id = int(self.config.get('telegram', 'user_id'))
         self.app = Client(
             self.username,
-            phone_number='+375291512758',  # TODO: number to config
+            phone_number=self.config.get('telegram', 'phone'),
             api_id=int(self.config.get('telegram', 'api_id')),
             api_hash=self.config.get('telegram', 'api_hash')
         )

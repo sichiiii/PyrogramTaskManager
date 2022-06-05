@@ -1,8 +1,7 @@
 import re
-import time
 
 from app_logger import get_logger
-from datetime import date, datetime
+from datetime import datetime
 
 
 class TimeMesParser:
@@ -11,16 +10,16 @@ class TimeMesParser:
 
     def parse_time_message(self, message_text: str):
         try:
-            if re.match(r'^(2[0-3]|[01]?\d):([0-5]?\d)$', message_text):
+            if re.match(r'^(2[0-3]|[01]?\d):([0-5]?\d)$', message_text): # TODO: make regex grouping
                 now = datetime.now()
                 current_time = datetime.strptime(now.strftime('%H:%M:%S'), '%H:%M:%S').time()
                 message_time_obj = datetime.strptime(message_text, '%H:%M').time()
-                if message_time_obj > current_time:  # eto pizdec
-                    return (int(str(message_time_obj)[:-6]) - int(str(current_time)[:-6])) * 3600 + \
-                           ((int(str(message_time_obj)[3:-3]) - int(str(current_time)[3:-3])) * 60)
+                current_hours, current_minutes = int(str(current_time)[:-6]), int(str(current_time)[3:-3])
+                future_hours,  future_minutes = int(str(message_time_obj)[:-6]), int(str(message_time_obj)[3:-3])
+                if message_time_obj > current_time:
+                    return (future_hours - current_hours) * 3600 + (future_minutes - current_minutes) * 60
                 else:
-                    return (24 - int(str(current_time)[:-6]) + int(str(message_time_obj)[:-6])) * 3600 + (60 - (
-                                 - int(str(current_time)[3:-3]) + int(str(message_time_obj)[3:-3])) * 60)
+                    return (24 - current_hours + future_hours) * 3600 + (60 - current_minutes + future_minutes) * 60
             else:
                 try:
                     buffer = float(message_text) * 3600
@@ -30,8 +29,3 @@ class TimeMesParser:
         except Exception as ex:
             self.logger.error(str(ex))
             return None
-
-
-if __name__ == '__main__':
-    tmp = TimeMesParser()
-    print(tmp.parse_time_message('01:42'))

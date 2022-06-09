@@ -1,5 +1,16 @@
 # Pyrogram Task Manager
 
+## Example of usage:
+
+![alt text](https://i.ibb.co/SmcVfjs/Screenshot-from-2022-06-09-03-27-41.png)
+
+### Emotes options:
+
+1. 🔥 - deletes task
+2. 👍 - add 'В обработке' to task
+
+## Installation
+
 Using pyrogram for task managing. Python version must be >3.8.
 
 Install libraries:
@@ -25,3 +36,7 @@ Manual start:
 ```
 cd app && python3.9 app.py
 ```
+
+
+
+

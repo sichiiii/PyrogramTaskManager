@@ -38,7 +38,6 @@ class Telegram:
                         reply_message_id = message.reply_to_message_id
                         if reply_message_id not in self.tasks_list:
                             time = self.time_mes_parser.parse_time_message(message.text)
-                            print(time)
                             if time is not None:
                                 asyncio.create_task(self.forward_message(reply_message_id, message.id,
                                                                          time, chat_id))
@@ -84,7 +83,6 @@ class Telegram:
         self.tasks_list.append(parent_message_id)
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        print(hours)
         await asyncio.sleep(hours)
         parent_mes = await self.app.get_messages(chat_id, parent_message_id)
         time_mes = await self.app.get_messages(chat_id, time_message_id)

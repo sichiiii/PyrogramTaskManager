@@ -33,7 +33,3 @@ class TimeMesParser:
                 return float(message_text)
             else:
                 return None
-
-if __name__ == '__main__':
-    t = TimeMesParser()
-    print(t.parse_time_message(4))

@@ -38,6 +38,7 @@ class Telegram:
                         reply_message_id = message.reply_to_message_id
                         if reply_message_id not in self.tasks_list:
                             time = self.time_mes_parser.parse_time_message(message.text)
+                            print(time)
                             if time is not None:
                                 asyncio.create_task(self.forward_message(reply_message_id, message.id,
                                                                          time, chat_id))

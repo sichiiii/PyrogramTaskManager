@@ -28,8 +28,9 @@ class TimeMesParser:
                     return (future_hours - current_hours) * 3600 + (future_minutes - current_minutes) * 60
                 else:
                     return (24 - current_hours + future_hours) * 3600 + (60 - current_minutes + future_minutes) * 60
-        except Exception as ex:
-            if self.check_float_str(message_text):
-                return float(message_text)
+            elif self.check_float_str(message_text):
+                return float(message_text) * 3600
             else:
                 return None
+        except Exception as ex:
+            return None

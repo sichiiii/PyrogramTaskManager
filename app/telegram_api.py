@@ -42,7 +42,7 @@ class Telegram:
                                 asyncio.create_task(self.forward_message(reply_message_id, message.id,
                                                                          time, chat_id))
                             else:
-                                asyncio.create_task(self.forward_message(reply_message_id, message.id, 4.0, chat_id))
+                                asyncio.create_task(self.forward_message(reply_message_id, message.id, 14400, chat_id))
                     else:
                         if message.from_user.id == self.user_id:
                             await self.parse_emotions(message, chat_id)

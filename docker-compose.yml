@@ -7,5 +7,5 @@ services:
   restarter:
     image: docker
     volumes: [ "/var/run/docker.sock:/var/run/docker.sock" ]
-    command: [ "/bin/sh", "-c", "while true; do sleep 43200; docker restart pyrogramtaskmanager-server-1; done" ]
+    command: [ "/bin/sh", "-c", "while true; do sleep 43200; docker restart pyrogramtaskmanager_server_1; done" ]
     restart: unless-stopped
